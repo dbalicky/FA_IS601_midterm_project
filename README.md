@@ -34,6 +34,7 @@ code .
   - `exceptions.py`
   - `history.py`
   - `input_validators.py`
+  - `operations.py`
 
 - `tests/`
   - `__init__.py`
