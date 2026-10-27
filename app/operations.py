@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from decimal import Decimal as DEC
 from typing import Dict
-from exceptions import ValidationError
+from app.exceptions import ValidationError
 
 
 class Operation(ABC):
@@ -161,7 +161,7 @@ class Power(Operation):
         If validation succeeds, returns the exponetiation of x and y.
         """
         self.validate_operands(x,y)
-        return x ** y
+        return DEC(pow(float(x), float(y)))
     
 class Root(Operation):
     """
@@ -193,7 +193,7 @@ class Root(Operation):
         If validation succeeds, returns the y-th root of x.
         """
         self.validate_operands(x,y)
-        return x ** (DEC("1") / y)
+        return DEC(pow(float(x), 1 / float(y)))
     
 class Modulus(Operation):
     """
@@ -223,7 +223,7 @@ class Modulus(Operation):
         If validation succeeds, returns the remainder of operand x divided by operand y.
         """
         self.validate_operands(x,y)
-        return x % y
+        return DEC(x % y)
     
 class IntegerDivision(Operation):
     """
@@ -303,3 +303,56 @@ class AbsoluteDifference(Operation):
         """
         self.validate_operands(x,y)
         return abs(x - y)
+
+class OperationFactory:
+    """
+    Factory class that implements the factory pattern.
+        
+    Creates operation instances.
+    """
+
+    # Maps operation identifiers to corresponding classes
+    _operations: Dict[str, type] = {
+        'add': Addition,
+        'subtract': Subtraction,
+        'multiply': Multiplication,
+        'divide': Division,
+        'power': Power,
+        'root': Root,
+        'modulus': Modulus,
+        'integer divide': IntegerDivision,
+        'percent': Percentage,
+        'absolute difference': AbsoluteDifference
+    }
+
+    @classmethod
+    def register_operation(cls, name: str, operation_class: type) -> None:
+        """
+        Class method for registering operation types.
+
+        Uses two arguments:
+            string name -> Operation identifier.
+            type operation_class --> Class implementing the operation.
+
+        Raises TypeError if operation_class does not inherit from Operation.
+        """
+        if not issubclass(operation_class, Operation):
+            raise TypeError("Operation class must inherit from Operation")
+        cls._operations[name.lower()] = operation_class
+
+    @classmethod
+    def create_operation(cls, operation_type: str) -> Operation:
+        """
+        Class method for creating operation instance based on the operation type.
+        
+        Uses argument:
+            string operation_class --> Type of operation to create.
+        
+        Raises ValueError if operation type is unknown.
+
+        Returns an instance of the operation class based on the operation type created.
+        """
+        operation_class = cls._operations.get(operation_type.lower())
+        if not operation_class:
+            raise ValueError(f"Unknown operation: {operation_type}")
+        return operation_class()
