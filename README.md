@@ -88,16 +88,12 @@ git remote add origin git@github.com:dbalicky/FA_IS601_midterm_project.git
 
 ### Install dependencies
 ```bash
-pip install -m requirements.txt
+pip install -r requirements.txt
 ```
 
-### Check and Test app
+### Test
 ```bash
 pytest
-```
-
-```bash
-python3 main.py
 ```
 
 ## Update Github Repository
