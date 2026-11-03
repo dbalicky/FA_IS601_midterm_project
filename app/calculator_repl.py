@@ -5,6 +5,7 @@ from app.calculator import Calculator
 from app.exceptions import OperationError, ValidationError
 from app.history import AutoSaveObserver, LoggingObserver
 from app.operations import OperationFactory
+from app.input_validators import InputValidator
 
 
 def calculator_repl():
@@ -32,7 +33,7 @@ def calculator_repl():
                 if command == 'help':
                     # Display available commands
                     print("\nAvailable commands:")
-                    print("  add, subtract, multiply, divide, power, root - Perform calculations")
+                    print("  add, subtract, multiply, divide, power, root, modulus, integer divide, percent, absolute difference")
                     print("  history - Show calculation history")
                     print("  clear - Clear calculation history")
                     print("  undo - Undo the last calculation")
@@ -111,10 +112,17 @@ def calculator_repl():
                         if a.lower() == 'cancel':
                             print("Operation cancelled")
                             continue
+
+                        # Validate the first number before continuing with the operations
+                        a = InputValidator.validate_number(a, calc.config)
+
                         b = input("Second number: ")
                         if b.lower() == 'cancel':
                             print("Operation cancelled")
                             continue
+
+                        # Validate the second number before performing the operation
+                        b = InputValidator.validate_number(b, calc.config)
 
                         # Create the appropriate operation instance using the Factory pattern
                         operation = OperationFactory.create_operation(command)
