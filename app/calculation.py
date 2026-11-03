@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 import datetime
 from decimal import Decimal, InvalidOperation
-import logging
 from typing import Any, Dict
 
 from app.exceptions import OperationError
@@ -17,9 +16,12 @@ class Calculation:
     operand1: Decimal   # First operand in calculation
     operand2: Decimal   # Second operand in calculation
 
-    # Fields with default values
-    result: Decimal # Result of the calculation, computed post-initialization
-    timestamp: datetime.datetime = field(default_factory=datetime.datetime.now) #Time when calculation was performed
+
+    # Required result provided by the operation strategy
+    result: Decimal
+
+    # Timestamp defaults to the current time
+    timestamp: datetime.datetime = field(default_factory=datetime.datetime.now)
 
     def to_dict(self) -> Dict[str, Any]:
         """
