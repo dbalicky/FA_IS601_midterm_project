@@ -203,7 +203,7 @@ def _raise_percent_zero():
   ...
 ```
 
-**Remove from from_dict method:**
+**Removed from from_dict method:**
 ```python
 calc.timestamp = datetime.datetime.fromisoformat(data['timestamp'])
 
@@ -239,3 +239,48 @@ result=result
 ```python
 import logging
 ```
+
+### Remove duplicate tests from test_calculation.py
+
+**Removed duplicate tests already covered in test_operations.py**
+```python
+test_addition()
+test_subtraction()
+...
+...
+test_absolute_difference()
+test_unknown_operation()
+```
+
+### Fix remaining tests in test_calculation.py
+
+**Added result parameters to tests:**
+```python
+def test_format_result():
+  ...
+  result=Decimal("1") / Decimal("3")
+  ...
+
+def test_equality():
+  calc1= Calculation(..., result=Decimal("5"))
+  calc2= Calculation(..., result=Decimal("5"))
+  calc3= Calculation(..., result=Decimal("2"))
+```
+
+** Updated test_from_dict_preserves_saved_result method to:***
+```python
+def test_from_dict_preserves_saved_result():
+  data = {
+      "operation": "Addition",
+      "operand1": "2",
+      "operand2": "3",
+      "result": "10",
+      "timestamp": datetime.now().isoformat()
+  }
+
+  calc = Calculation.from_dict(data)
+
+  assert calc.result == Decimal("10")
+```
+
+**Removed logging import**
