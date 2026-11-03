@@ -18,120 +18,8 @@ class Calculation:
     operand2: Decimal   # Second operand in calculation
 
     # Fields with default values
-    result: Decimal = field(init=False) # Result of the calculation, computed post-initialization
+    result: Decimal # Result of the calculation, computed post-initialization
     timestamp: datetime.datetime = field(default_factory=datetime.datetime.now) #Time when calculation was performed
-
-    def __post_init__(self):
-        """
-        Post-initialization processing.
-        
-        Automatically calculates result of operation after 
-        the Calculation instance is created.
-        """
-        self.result = self.calculate()
-
-    def calculate(self) -> Decimal:
-        """
-        Method for executing the calculation using specified operation.
-        
-        Raises OperationError if operation is unkown or if calculation fails.
-        
-        Returns the result of the calculation as a Decimal.
-        """
-        # Mapping operation names to their correspogding functions
-        operations = {
-            "Addition": lambda x, y: x + y,
-            "Subtraction": lambda x, y: x - y,
-            "Multiplication": lambda x, y: x * y,
-            "Division": lambda x, y: x / y if y != 0 else self._raise_div_zero(),
-            "Power": lambda x, y: Decimal(pow(float(x), float(y))) if y >= 0 else self._raise_neg_power(),
-            "Root": lambda x, y: (
-                Decimal(pow(float(x), 1 / float(y))) 
-                if x >= 0 and y != 0 
-                else self._raise_invalid_root(x, y)
-            ),
-            "Modulus": lambda x, y: Decimal(x % y) if y!= 0 else self._raise_mod_zero(),
-            "IntegerDivision": lambda x, y: Decimal(int(x / y)) if y != 0 else self._raise_intdiv_zero(),
-            "Percentage": lambda x, y: (x/y) * Decimal("100") if y != 0 else self._raise_percent_zero(),
-            "AbsoluteDifference": lambda x, y: abs(x - y)
-        }
-
-        # Retreive oprations function based on operation name
-        op = operations.get(self.operation)
-        if not op:
-            raise OperationError(f"Unknown operation: {self.operation}")
-
-        try:
-            # Execute operation with the operands
-            return op(self.operand1, self.operand2)
-        except (InvalidOperation, ValueError, ArithmeticError) as e:
-            # Handle any error that occur during calculation
-            raise OperationError(f"Calculation failed: {str(e)}")
-
-    @staticmethod
-    def _raise_div_zero():  # pragma: no cover
-        """
-        Helper method to raise division by zero error.
-
-        This method is called when a division by zero is attempted.
-        """
-        raise OperationError("Error: Cannot divide by zero")
-
-    @staticmethod
-    def _raise_neg_power():  # pragma: no cover
-        """
-        Helper method to raise negative power error.
-
-        This method is called when a negative exponent is used in a power operation.
-        """
-        raise OperationError("Error: Cannot raise zero to the power of a negative number")
-
-    @staticmethod
-    def _raise_invalid_root(x: Decimal, y: Decimal):  # pragma: no cover
-        """
-        Helper method to raise invalid root error.
-
-        This method is called when an invalid root operation is attempted, such as
-        taking the root of a negative number or using zero as the root degree.
-
-        Args:
-            x (Decimal): The number from which the root is taken.
-            y (Decimal): The degree of the root.
-        """
-        if y == 0:
-            raise OperationError("Error: Zero root is undefined")
-        if x < 0:
-            raise OperationError("Error: Cannot take the root of a negative number")
-        raise OperationError("Invalid root operation")
-
-    @staticmethod
-    def _raise_mod_zero(): # pragma: no cover
-        """
-        Helper method to raise modulus divide by zero error.
-        
-        This method is called when a division by zero is attempted for a modulus operation.
-        """
-        raise OperationError("Error: Cannot find remainder of a number divided by zero")
-
-    @staticmethod
-    def _raise_intdiv_zero(): # pragma: no cover
-        """
-        Helper method to raise integer division divide by zero error.
-        
-        This method is called when division by zero is attempted
-        for an integer division operation.
-        """
-        raise OperationError("Error: Cannot divide by zero")
-
-    @staticmethod
-    def _raise_percent_zero(): # pragma: no cover
-        """
-        Helper method to raise percentage divide by zero error.
-
-        This method is called when division by zero is attempted
-        for a percentage operation.
-        """
-        raise OperationError("Error: Cannot divide by zero")
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -154,43 +42,21 @@ class Calculation:
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> 'Calculation':
         """
-        Create calculation from dictionary.
-
         This method reconstructs a Calculation instance from a dictionary, ensuring
         that all required fields are present and correctly formatted.
-
-        Args:
-            data (Dict[str, Any]): Dictionary containing calculation data.
-
-        Returns:
-            Calculation: A new instance of Calculation with data populated from the dictionary.
-
-        Raises:
-            OperationError: If data is invalid or missing required fields.
         """
         try:
-            # Create the calculation object with the original operands
-            calc = Calculation(
+            # Return the Calculation object with original values
+            return Calculation(
                 operation=data['operation'],
                 operand1=Decimal(data['operand1']),
-                operand2=Decimal(data['operand2'])
+                operand2=Decimal(data['operand2']),
+                result=Decimal(data['result']),
+                timestamp=datetime.datetime.fromisoformat(data['timestamp'])
             )
 
-            # Set the timestamp from the saved data
-            calc.timestamp = datetime.datetime.fromisoformat(data['timestamp'])
-
-            # Verify the result matches (helps catch data corruption)
-            saved_result = Decimal(data['result'])
-            if calc.result != saved_result:
-                logging.warning(
-                    f"Loaded calculation result {saved_result} "
-                    f"differs from computed result {calc.result}"
-                )  # pragma: no cover
-
-            return calc
-
-        except (KeyError, InvalidOperation, ValueError) as e:
-            raise OperationError(f"Invalid calculation data: {str(e)}")
+        except (KeyError, InvalidOperation, ValueError, TypeError) as e:
+            raise OperationError(f"Invalid calculation data: {str(e)}") from e
 
     def __str__(self) -> str:
         """
