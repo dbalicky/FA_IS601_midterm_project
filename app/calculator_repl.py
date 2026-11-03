@@ -44,12 +44,15 @@ def calculator_repl():
                     continue
 
                 if command == 'exit':
-                    # Attempt to save history before exiting
-                    try:
-                        calc.save_history()
-                        print("History saved successfully.")
-                    except Exception as e:
-                        print(f"Warning: Could not save history: {e}")
+                    # Save history on exit only if auto-save enabled
+
+                    if calc.config.auto_save:
+                        try:
+                            calc.save_history()
+                            print("History saved successfully.")
+                        except Exception as e:
+                            print(f"Warning: Could not save history: {e}")
+                            
                     print("Goodbye!")
                     break
 
@@ -131,11 +134,14 @@ def calculator_repl():
                         # Perform the calculation
                         result = calc.perform_operation(a, b)
 
-                        # Normalize the result if it's a Decimal
+                        # Format the result according to the configured precision
                         if isinstance(result, Decimal):
-                            result = result.normalize()
+                            display_result = f"{result:.{calc.config.precision}f}"
+                            display_result = display_result.rstrip('0').rstrip('.') if '.' in display_result else display_result
+                        else:
+                            display_result = str(result)
 
-                        print(f"\nResult: {result}")
+                        print(f"\nResult: {display_result}")
                     except (ValidationError, OperationError) as e:
                         # Handle known exceptions related to validation or operation errors
                         print(f"Error: {e}")
