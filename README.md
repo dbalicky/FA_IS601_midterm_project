@@ -227,3 +227,10 @@ return Calculation(
     timestamp=datetime.datetime.fromisoformat(data['timestamp'])
 )
 ```
+
+### Update Calculaion instance creation in calculator.py
+
+**Add to calculation in perform_operation method:**
+```python
+result=result
+```
