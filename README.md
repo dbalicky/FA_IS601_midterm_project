@@ -111,3 +111,39 @@ git push -u origin main
 
 ### afterwards use: git push
 ```
+
+# Project Corrections
+
+## Fix App CL
+
+### Add code to main.py
+
+```python
+from app.calculator_repl import calculator_repl
+
+def main():
+    "Start the calculator cl app"
+    calculator_repl()
+
+if __name__ == "__main__":
+    main()
+```
+
+## Correct Input Validation in REPL
+
+### Implement input valiadtion in REPL
+
+**Added import to calculator_repl.py**
+```python
+from app.input_validators import InputValidator
+```
+
+**Added validation after first input in calculator_repl.py**
+```python
+a = InputValidator.validate_number(a, calc.config)
+```
+
+**Added validation after second input in calculator_repl.py**
+```python
+b = InputValidator.validate_number(b, calc.config)
+```
