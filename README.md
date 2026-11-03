@@ -284,3 +284,48 @@ def test_from_dict_preserves_saved_result():
 ```
 
 **Removed logging import**
+
+## Configure .env
+
+### Create .env
+
+**Added configurations to .env:**
+```python
+CALCULATOR_LOG_DIR=logs
+CALCULATOR_HISTORY_DIR=history
+CALCULATOR_MAX_HISTORY_SIZE=100
+CALCULATOR_AUTO_SAVE=true
+CALCULATOR_PRECISION=2
+CALCULATOR_MAX_INPUT_VALUE=1000000
+CALCULATOR_DEFAULT_ENCODING=utf-8
+```
+
+### Fix calculator precicion in calculator_repl.py
+
+**Change following code:**
+```python
+if isinstance(result, Decimal):
+    result = result.normalize()
+
+print(f"\nResult: {result}")
+```
+
+**to:**
+```python
+if isinstance(result, Decimal):
+    display_result = f"{result:.{calc.config.precision}f}"
+    display_result = display_result.rstrip('0').rstrip('.') if '.' in display_result else display_result
+else:
+    display_result = str(result)
+
+print(f"\nResult: {display_result}")
+```
+
+### Fix auto save only if auto-save is enabled
+
+**Add to auto save code:**
+```python
+...
+  if calc.config.auto.save:
+    ...
+```
