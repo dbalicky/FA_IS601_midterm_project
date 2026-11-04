@@ -161,9 +161,15 @@ def test_clear_history(calculator):
 @patch('builtins.input', side_effect=['exit'])
 @patch('builtins.print')
 def test_calculator_repl_exit(mock_print, mock_input):
-    with patch('app.calculator.Calculator.save_history') as mock_save_history:
+    with patch('app.calculator_repl.Calculator') as mock_calculator:
+        mock_calc = mock_calculator.return_value
+
+        # Enable automatic saving for this test
+        mock_calc.config.auto_save = True
+
         calculator_repl()
-        mock_save_history.assert_called_once()
+
+        mock_calc.save_history.assert_called_once()
         mock_print.assert_any_call("History saved successfully.")
         mock_print.assert_any_call("Goodbye!")
 
@@ -226,14 +232,20 @@ def test_calculator_repl_history_with_entries(mock_print, mock_input):
 @patch('builtins.input', side_effect=['exit'])
 @patch('builtins.print')
 def test_calculator_repl_exit_save_history_error(mock_print, mock_input):
-    with patch(
-        'app.calculator.Calculator.save_history',
-        side_effect=Exception("save failed")
-    ):
+    with patch('app.calculator_repl.Calculator') as mock_calculator:
+        mock_calc = mock_calculator.return_value
+
+        # Enable auto save
+        mock_calc.config.auto_save = True
+
+        # Simulate an error when saving history
+        mock_calc.save_history.side_effect = Exception("save failed")
+
         calculator_repl()
 
-    mock_print.assert_any_call("Warning: Could not save history: save failed")
-    mock_print.assert_any_call("Goodbye!")
+        mock_calc.save_history.assert_called_once()
+        mock_print.assert_any_call("Warning: Could not save history: save failed")
+        mock_print.assert_any_call("Goodbye!")
 
 @patch('builtins.print')
 def test_calculator_repl_fatal_initialization_error(mock_print):
@@ -283,6 +295,22 @@ def test_calculator_repl_general_exception(mock_print, mock_input):
 
     mock_print.assert_any_call("Error: input failed")
 
+@patch('builtins.input', side_effect=['exit'])
+@patch('builtins.print')
+def test_calculator_repl_exit_auto_save_disabled(mock_print, mock_input):
+    with patch('app.calculator_repl.Calculator') as mock_calculator:
+        mock_calc = mock_calculator.return_value
+
+        # Disable auto save
+        mock_calc.config.auto_save = False
+
+        calculator_repl()
+
+        # Verify that history wasn't auto saved
+        mock_calc.save_history.assert_not_called()
+
+        mock_print.assert_any_call("Goodbye!")
+
 def test_calculator_init_handles_load_history_error():
     with patch.object(Calculator, "load_history", side_effect=Exception("load failed")):
         calc = Calculator()
@@ -307,3 +335,4 @@ def test_calculate_raises_operation_error_when_operation_fails():
 
     with pytest.raises(OperationError, match="Operation failed"):
         calc.perform_operation(2, 3)
+
