@@ -302,7 +302,7 @@ CALCULATOR_DEFAULT_ENCODING=utf-8
 
 ### Fix calculator precicion in calculator_repl.py
 
-**Change following code:**
+**Changed following code:**
 ```python
 if isinstance(result, Decimal):
     result = result.normalize()
@@ -321,15 +321,15 @@ else:
 print(f"\nResult: {display_result}")
 ```
 
-### Fix auto save only if auto-save is enabled
+### Fix auto save in calculator_repl.py only if auto-save is enabled
 
-**Add to auto save code:**
+**Added to auto save code:**
 ```python
 ...
   if calc.config.auto.save:
     ...
 ```
-**Add code to EOFError handler**
+**Added code to EOFError handler**
 ```python
 ...
 if calc.config.auto_save:
@@ -339,3 +339,92 @@ try:
 except Exception as e:
   print(f"Warning, could not save successfully: {e}")
 ...
+```
+
+### Add default encoding to write and read methods in calculator.py
+
+**Added following parameter to all .to_csv and .read_csv commands in load_history and save_history methods**
+```python
+encoding=self.config.default_encoding
+```
+
+### Fix calculator tests for automatic saving
+
+**Made changes to following:**
+```python
+@patch('builtins.input', side_effect=['exit'])
+@patch('builtins.print')
+def test_calculator_repl_exit(mock_print, mock_input):
+    with patch('app.calculator.Calculator.save_history') as mock_save_history:
+        calculator_repl()
+        mock_save_history.assert_called_once()
+        mock_print.assert_any_call("History saved successfully.")
+        mock_print.assert_any_call("Goodbye!")
+
+...
+
+@patch('builtins.input', side_effect=['exit'])
+@patch('builtins.print')
+def test_calculator_repl_exit_save_history_error(mock_print, mock_input):
+    with patch(
+        'app.calculator.Calculator.save_history',
+        side_effect=Exception("save failed")
+    ):
+        calculator_repl()
+
+    mock_print.assert_any_call("Warning: Could not save history: save failed")
+    mock_print.assert_any_call("Goodbye!")
+```
+**to:**
+```python
+@patch('builtins.input', side_effect=['exit'])
+@patch('builtins.print')
+def test_calculator_repl_exit(mock_print, mock_input):
+    with patch('app.calculator_repl.Calculator') as mock_calculator:
+        mock_calc = mock_calculator.return_value
+
+        mock_calc.config.auto_save = True
+
+        calculator_repl()
+
+        mock_calc.save_history.assert_called_once()
+        mock_print.assert_any_call("History saved successfully.")
+        mock_print.assert_any_call("Goodbye!")
+
+...
+
+@patch('builtins.input', side_effect=['exit'])
+@patch('builtins.print')
+def test_calculator_repl_exit_save_history_error(mock_print, mock_input):
+    with patch('app.calculator_repl.Calculator') as mock_calculator:
+        mock_calc = mock_calculator.return_value
+
+        # Enable auto save
+        mock_calc.config.auto_save = True
+
+        # Simulate an error when saving history
+        mock_calc.save_history.side_effect = Exception("save failed")
+
+        calculator_repl()
+
+        mock_calc.save_history.assert_called_once()
+        mock_print.assert_any_call("Warning: Could not save history: save failed")
+        mock_print.assert_any_call("Goodbye!")
+```
+
+**Add following test for when auto_save=False**
+```python
+@patch('builtins.input', side_effect=['exit'])
+@patch('builtins.print')
+def test_calculator_repl_exit_auto_save_disabled(mock_print, mock_input):
+    with patch('app.calculator_repl.Calculator') as mock_calculator:
+        mock_calc = mock_calculator.return_value
+
+        mock_calc.config.auto_save = False
+
+        calculator_repl()
+
+        mock_calc.save_history.assert_not_called()
+
+        mock_print.assert_any_call("Goodbye!")
+```
