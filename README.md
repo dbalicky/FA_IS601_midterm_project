@@ -329,3 +329,13 @@ print(f"\nResult: {display_result}")
   if calc.config.auto.save:
     ...
 ```
+**Add code to EOFError handler**
+```python
+...
+if calc.config.auto_save:
+try:
+  calc.save_history()
+  print("History saved successfully.")
+except Exception as e:
+  print(f"Warning, could not save successfully: {e}")
+...
