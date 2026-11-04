@@ -311,6 +311,36 @@ def test_calculator_repl_exit_auto_save_disabled(mock_print, mock_input):
 
         mock_print.assert_any_call("Goodbye!")
 
+# Test for successful undo command
+@patch('builtins.input', side_effect=['undo', 'exit'])
+@patch('builtins.print')
+def test_calculator_repl_undo_success(mock_print, mock_input):
+    with patch('app.calculator_repl.Calculator') as mock_calculator:
+        mock_calc = mock_calculator.return_value
+        mock_calc.config.auto_save = False
+        mock_calc.undo.return_value = True
+
+        calculator_repl()
+
+        mock_calc.undo.assert_called_once()
+        mock_print.assert_any_call("Operation undone")
+
+# Test for unsuccessful undo command
+
+@patch('builtins.input', side_effect=['undo', 'exit'])
+@patch('builtins.print')
+def test_calculator_repl_undo_empty(mock_print, mock_input):
+    with patch('app.calculator_repl.Calculator') as mock_calculator:
+        mock_calc = mock_calculator.return_value
+        mock_calc.config.auto_save = False
+        mock_calc.undo.return_value = False
+
+        calculator_repl()
+
+        mock_calc.undo.assert_called_once()
+        mock_print.assert_any_call("Nothing to undo")
+
+
 def test_calculator_init_handles_load_history_error():
     with patch.object(Calculator, "load_history", side_effect=Exception("load failed")):
         calc = Calculator()
