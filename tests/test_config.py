@@ -65,7 +65,7 @@ def test_invalid_max_history_size():
         config.validate()
 
 def test_invalid_precision():
-    with pytest.raises(ConfigurationError, match="precision must be positive"):
+    with pytest.raises(ConfigurationError, match="precision must not be negative"):
         config = CalculatorConfig(precision=-1)
         config.validate()
 
