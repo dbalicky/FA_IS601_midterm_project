@@ -590,3 +590,38 @@ self.base_dir = Path(
     else os.getenv('CALCULATOR_BASE_DIR', str(project_root))
 ).resolve()
 ```
+
+## Add REPL tests in test_calculator.py to reach minimum test coverage
+
+**Add successful undo test**
+```python
+@patch('builtins.input', side_effect=['undo', 'exit'])
+@patch('builtins.print')
+def test_calculator_repl_undo_success(mock_print, mock_input):
+    with patch('app.calculator_repl.Calculator') as mock_calculator:
+        mock_calc = mock_calculator.return_value
+        mock_calc.config.auto_save = False
+        mock_calc.undo.return_value = True
+
+        calculator_repl()
+
+        mock_calc.undo.assert_called_once()
+        mock_print.assert_any_call("Operation undone")
+```
+
+**Add unsuccessful undo test**
+```python
+@patch('builtins.input', side_effect=['undo', 'exit'])
+@patch('builtins.print')
+def test_calculator_repl_undo_empty(mock_print, mock_input):
+    with patch('app.calculator_repl.Calculator') as mock_calculator:
+        mock_calc = mock_calculator.return_value
+        mock_calc.config.auto_save = False
+        mock_calc.undo.return_value = False
+
+        calculator_repl()
+
+        mock_calc.undo.assert_called_once()
+        mock_print.assert_any_call("Nothing to undo")
+
+```
