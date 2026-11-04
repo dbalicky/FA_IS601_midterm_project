@@ -1,3 +1,17 @@
+# Project introduction
+
+This project is a calculator application that implements REPL to allow users to choose an operation (addition, subtraction, multiplication, division, power, root, modulus, percent, integer division, absolute difference) and input 2 numbers to perform the chosen calculation.
+
+The application allows REPL commands such as history and clear: to view or clear the calculation history; undo and redo: to reverse or restore calculations; save and load: to manage saved CSV history; help: which shows all commands; exit: which exits the application; and cancel: which cancels operand entry.
+
+# Running Application
+
+After installing required dependencies and activating virtual environment, start the calculator from the project's root directory with:
+```python
+python main.py
+```
+The calculator launches the REPL, which allows the users to enter arithmetic commands, and provide two numerical operands. Users can enter the help command to display all the available commands, history to view previous calculations, or exit to terminate the application. When prompted to enter operands, users can type *cancel* to abort the current calculation
+
 # Project Setup
 
 ## Directory Setup
@@ -18,7 +32,7 @@ code .
 
 **In VSCode: right-click in explorer; New File or New Folder**
 
-- `.github/workkflows/tests.yml`
+- `.github/workflows/tests.yml`
 
 - `.vscode/`
     - `launch.json`
@@ -58,6 +72,15 @@ code .
 
 - `requirements.txt`
 
+**Commands to clone and access project directory:**
+```bash
+git clone https://github.com/dbalicky/FA_IS601_midterm_project.git
+
+cd FA_IS601_midterm_project
+```
+
+*Note, cloning the repository requires the creation of a local .env file*
+
 ## Project Initialization
 
 ### Set python version to 3.10
@@ -96,6 +119,22 @@ pip install -r requirements.txt
 pytest
 ```
 
+```bash
+python -m pytest --cov=app --cov-report=term-missing
+```
+
+*Note, latest local test run reported 112 tests passing with 90% coverage*
+
+### CI/CD with Github Actions
+
+Workflow configuration for this project is located in:
+
+*.github/workflows/tests.yml*
+
+The workflow is reponsible for setting up the Python environment using a specific version, installing the required dependencies from *requirements.txt*, and running automated tests using pytest.
+
+Test results and execution status of the workflow are located in the **Actions** tab of the Github repository.
+
 ## Update Github Repository
 
 ### Add files and commit
@@ -122,7 +161,7 @@ git push -u origin main
 from app.calculator_repl import calculator_repl
 
 def main():
-    "Start the calculator cl app"
+    """Start the calculator command-line app."""
     calculator_repl()
 
 if __name__ == "__main__":
@@ -131,7 +170,7 @@ if __name__ == "__main__":
 
 ## Correct Input Validation in REPL
 
-### Implement input valiadtion in REPL
+### Implement input validation in REPL
 
 **Added import to calculator_repl.py**
 ```python
@@ -285,7 +324,7 @@ def test_from_dict_preserves_saved_result():
 
 **Removed logging import**
 
-## Configure .env
+## Configure and Implement .env
 
 ### Create .env
 
@@ -326,7 +365,7 @@ print(f"\nResult: {display_result}")
 **Added to auto save code:**
 ```python
 ...
-  if calc.config.auto.save:
+  if calc.config.auto_save:
     ...
 ```
 **Added code to EOFError handler**
@@ -412,7 +451,7 @@ def test_calculator_repl_exit_save_history_error(mock_print, mock_input):
         mock_print.assert_any_call("Goodbye!")
 ```
 
-**Add following test for when auto_save=False**
+**Added following test for when auto_save=False**
 ```python
 @patch('builtins.input', side_effect=['exit'])
 @patch('builtins.print')
@@ -427,4 +466,127 @@ def test_calculator_repl_exit_auto_save_disabled(mock_print, mock_input):
         mock_calc.save_history.assert_not_called()
 
         mock_print.assert_any_call("Goodbye!")
+```
+
+### Adjust configuration settings in calculator_config.py
+
+**Updated configuration setting for maximum history size in __init__()**
+```python
+self.max_history_size = (
+    max_history_size
+    if max_history_size is not None
+    else int(os.getenv('CALCULATOR_MAX_HISTORY_SIZE', '1000'))
+)
+```
+
+**Updated configuration setting for precision**
+```python
+self.precision = (
+    precision
+    if precision is not None
+    else int(os.getenv('CALCULATOR_PRECISION', '10'))
+)
+```
+
+**Updated configuration setting for maximum input value**
+```python
+self.max_input_value = (
+    Decimal(str(max_input_value))
+    if max_input_value is not None
+    else Decimal(os.getenv('CALCULATOR_MAX_INPUT_VALUE', '1e999'))
+)
+```
+
+**Updated configuration setting for default encoding**
+```python
+self.default_encoding = (
+    default_encoding
+    if default_encoding is not None
+    else os.getenv('CALCULATOR_DEFAULT_ENCODING', 'utf-8')
+)
+```
+
+**Changed precision check for ConfigurationError**
+```python
+if self.precision < 0:
+    raise ConfigurationError("precision must not be negative")
+```
+
+### Validate configuration values in calculator_config.py
+
+**Added encoding validation with codecs**
+```python
+import codecs
+...
+...
+try:
+  codecs.lookup(self.default_encoding)
+except (LookupError, TypeError):
+  raise ConfigurationError(
+    f"Invalid encoding: {self.default_encoding}"
+  )
+```
+
+**Updated log_dir property**
+```python
+path = Path(os.getenv('CALCULATOR_LOG_DIR', 'logs'))
+
+if not path.is_absolute():
+    path = self.base_dir / path
+
+return path.resolve()
+```
+
+**Updated history_dir property**
+```python
+path = Path(os.getenv('CALCULATOR_HISTORY_DIR', 'history'))
+
+if not path.is_absolute():
+    path = self.base_dir / path
+
+return path.resolve()
+```
+
+**Updated history_file property**
+```python
+configured_path = os.getenv('CALCULATOR_HISTORY_FILE')
+
+if configured_path is None:
+    return (self.history_dir / "calculator_history.csv").resolve()
+
+path = Path(configured_path)
+
+if not path.is_absolute():
+    path = self.base_dir / path
+
+return path.resolve()
+```
+
+**Updated log_file property**
+```python
+path = Path(os.getenv(
+    'CALCULATOR_LOG_FILE',
+    str(self.log_dir / "calculator.log")
+))
+
+if not path.is_absolute():
+    path = self.base_dir / path
+
+return path.resolve()
+```
+
+**Updated expected thrown error value in test_config.py for precision check**
+```python
+def test_invalid_precision():
+    with pytest.raises(ConfigurationError, match="precision must not be negative"):
+        config = CalculatorConfig(precision=-1)
+        config.validate()
+```
+
+**Updated code for base directory**
+```python
+self.base_dir = Path(
+    base_dir if base_dir is not None
+    else os.getenv('CALCULATOR_BASE_DIR', str(project_root))
+).resolve()
 ```
