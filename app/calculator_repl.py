@@ -160,6 +160,14 @@ def calculator_repl():
             except EOFError:
                 # Handle end-of-file (e.g., Ctrl+D) gracefully
                 print("\nInput terminated. Exiting...")
+
+                if calc.config.auto_save:
+                    try:
+                        calc.save_history()
+                        print("History saved successfully.")
+                    except Exception as e:
+                        print(f"Warning, could not save successfully: {e}")
+                        
                 break
             except Exception as e:
                 # Handle any other unexpected exceptions
