@@ -12,6 +12,10 @@ from app.exceptions import OperationError, ValidationError
 from app.history import LoggingObserver, AutoSaveObserver
 from app.operations import OperationFactory
 
+from colorama import Fore, Style , init
+
+init(autoreset=True)
+
 # Fixture to initialize Calculator with a temporary directory for file paths
 @pytest.fixture
 def calculator():
@@ -170,14 +174,14 @@ def test_calculator_repl_exit(mock_print, mock_input):
         calculator_repl()
 
         mock_calc.save_history.assert_called_once()
-        mock_print.assert_any_call("History saved successfully.")
+        mock_print.assert_any_call(Fore.GREEN + "History saved successfully." + Style.RESET_ALL)
         mock_print.assert_any_call("Goodbye!")
 
 @patch('builtins.input', side_effect=['help', 'exit'])
 @patch('builtins.print')
 def test_calculator_repl_help(mock_print, mock_input):
     calculator_repl()
-    mock_print.assert_any_call("\nAvailable commands:")
+    mock_print.assert_any_call(Fore.CYAN + "\nAvailable commands:" + Style.RESET_ALL)
 
 @patch('builtins.input', side_effect=['add', '2', '3', 'exit'])
 @patch('builtins.print')
@@ -189,13 +193,13 @@ def test_calculator_repl_addition(mock_print, mock_input):
 @patch('builtins.print')
 def test_calculator_repl_cancel_first_number(mock_print, mock_input):
     calculator_repl()
-    mock_print.assert_any_call("Operation cancelled")
+    mock_print.assert_any_call(Fore.YELLOW + "Operation cancelled" + Style.RESET_ALL)
 
 @patch('builtins.input', side_effect=['add', '1', 'cancel', 'exit'])
 @patch('builtins.print')
 def test_calculator_repl_cancel_second_number(mock_print, mock_input):
     calculator_repl()
-    mock_print.assert_any_call("Operation cancelled")
+    mock_print.assert_any_call(Fore.YELLOW + "Operation cancelled" + Style.RESET_ALL)
 
 @patch('builtins.input', side_effect=['clear', 'exit'])
 @patch('builtins.print')
@@ -205,7 +209,7 @@ def test_calculator_repl_clear(mock_print, mock_input):
             calculator_repl()
 
     mock_clear_history.assert_called_once()
-    mock_print.assert_any_call("History cleared")
+    mock_print.assert_any_call(Fore.CYAN + "History cleared" + Style.RESET_ALL)
 
 @patch('builtins.input', side_effect=['history', 'exit'])
 @patch('builtins.print')
@@ -225,7 +229,7 @@ def test_calculator_repl_history_with_entries(mock_print, mock_input):
         with patch('app.calculator.Calculator.save_history'):
             calculator_repl()
 
-    mock_print.assert_any_call("\nCalculation History:")
+    mock_print.assert_any_call(Fore.CYAN + "\nCalculation History:" + Style.RESET_ALL)
     mock_print.assert_any_call("1. 2 + 3 = 5")
     mock_print.assert_any_call("2. 10 - 4 = 6")
 
@@ -244,7 +248,7 @@ def test_calculator_repl_exit_save_history_error(mock_print, mock_input):
         calculator_repl()
 
         mock_calc.save_history.assert_called_once()
-        mock_print.assert_any_call("Warning: Could not save history: save failed")
+        mock_print.assert_any_call(Fore.YELLOW + "Warning: Could not save history: save failed" + Style.RESET_ALL)
         mock_print.assert_any_call("Goodbye!")
 
 @patch('builtins.print')
@@ -256,7 +260,7 @@ def test_calculator_repl_fatal_initialization_error(mock_print):
         with pytest.raises(Exception, match="init failed"):
             calculator_repl()
 
-    mock_print.assert_any_call("Fatal error: init failed")
+    mock_print.assert_any_call(Fore.RED + "Fatal error: init failed" + Style.RESET_ALL)
 
 @patch('builtins.input', side_effect=['blah', 'exit'])
 @patch('builtins.print')
@@ -265,7 +269,7 @@ def test_calculator_repl_unknown_command(mock_print, mock_input):
         calculator_repl()
 
     mock_print.assert_any_call(
-        "Unknown command: 'blah'. Type 'help' for available commands."
+        Fore.CYAN + "Unknown command: 'blah'. Type 'help' for available commands." + Style.RESET_ALL
     )
 
 # Test for exception errors
@@ -276,7 +280,7 @@ def test_calculator_repl_keyboard_interrupt(mock_print, mock_input):
     with patch('app.calculator.Calculator.save_history'):
         calculator_repl()
 
-    mock_print.assert_any_call("\nOperation cancelled")
+    mock_print.assert_any_call(Fore.YELLOW + "\nOperation cancelled" + Style.RESET_ALL)
 
 
 @patch('builtins.input', side_effect=EOFError)
@@ -293,7 +297,7 @@ def test_calculator_repl_general_exception(mock_print, mock_input):
     with patch('app.calculator.Calculator.save_history'):
         calculator_repl()
 
-    mock_print.assert_any_call("Error: input failed")
+    mock_print.assert_any_call(Fore.RED + "Error: input failed" + Style.RESET_ALL)
 
 @patch('builtins.input', side_effect=['exit'])
 @patch('builtins.print')
@@ -323,7 +327,7 @@ def test_calculator_repl_undo_success(mock_print, mock_input):
         calculator_repl()
 
         mock_calc.undo.assert_called_once()
-        mock_print.assert_any_call("Operation undone")
+        mock_print.assert_any_call(Fore.CYAN + "Operation undone" + Style.RESET_ALL)
 
 # Test for unsuccessful undo command
 
