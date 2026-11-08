@@ -635,6 +635,11 @@ def test_calculator_repl_undo_empty(mock_print, mock_input):
 pip install colorama
 ```
 
+### Add colorama to requirements.txt
+```txt
+colorama==0.4.6
+```
+
 ### Add imports to calculator_repl.py
 ```python
 from colorama import Fore, Style, init
